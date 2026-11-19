@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Equipment Requests</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>Equipment Requests</h1>
+    <section aria-labelledby="overview-heading">
+      <h2 id="overview-heading">Request Overview</h2>
+      <dl id="overview"></dl>
+    </section>
+    <section aria-labelledby="queue-heading" class="panel">
+      <h2 id="queue-heading">Action Queue</h2>
+      <div class="controls">
+        <label>View <select id="filter">
+          <option value="all">All Requests</option>
+          <option value="attention">Needs Attention</option>
+          <option>High</option><option>Medium</option><option>Low</option>
+        </select></label>
+        <button id="clear" type="button">Clear filters</button>
+      </div>
+      <p id="empty" role="status" hidden>No equipment requests currently match this priority. You're all caught up.</p>
+      <div class="table-scroll" id="results">
+        <table>
+          <thead><tr><th scope="col">ID</th><th scope="col">Equipment</th><th scope="col">Priority</th><th scope="col">Status</th><th scope="col">Change priority</th></tr></thead>
+          <tbody id="requests"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="panel" aria-labelledby="add-heading">
+      <h2 id="add-heading">Add request</h2>
+      <form id="add" class="controls">
+        <label>Equipment <input name="equipment" required maxlength="100"></label>
+        <label>Priority <select name="priority"><option>High</option><option selected>Medium</option><option>Low</option></select></label>
+        <button>Add request</button>
+      </form>
+      <p id="feedback" role="status" hidden></p>
+    </section>
+  </main>
+</body>
+</html>
