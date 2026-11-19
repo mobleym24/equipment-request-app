@@ -20,14 +20,23 @@ const form = document.querySelector("#add");
 const feedback = document.querySelector("#feedback");
 let requests = loadRequests();
 
-function loadRequests() {
+function loadRequests(fallback = sampleRequests) {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey));
     if (Array.isArray(saved)) return saved;
   } catch {
     // The app can still run when browser storage is unavailable.
   }
-  return sampleRequests;
+  return fallback;
+}
+
+async function updateRequests(change) {
+  const apply = () => saveRequests(change(loadRequests(requests)));
+  if (navigator.locks) {
+    await navigator.locks.request(storageKey, apply);
+  } else {
+    apply();
+  }
 }
 
 function saveRequests(nextRequests) {
@@ -82,9 +91,11 @@ function requestRow(request) {
     select.add(option);
   }
   select.value = priority;
-  select.addEventListener("change", () => {
+  select.addEventListener("change", async () => {
     const label = select.getAttribute("aria-label");
-    saveRequests(requests.map(item => item === request ? { ...item, priority: select.value } : item));
+    const priority = select.value;
+    await updateRequests(current => current.map(item =>
+      item.id === request.id ? { ...item, priority } : item));
     const updated = rows.querySelector(`select[aria-label="${CSS.escape(label)}"]`);
     (updated ?? filter).focus();
   });
@@ -120,16 +131,25 @@ document.querySelector("#clear").addEventListener("click", () => {
   filter.focus();
 });
 
-form.addEventListener("submit", event => {
+form.addEventListener("submit", async event => {
   event.preventDefault();
   const equipment = form.elements.equipment.value.trim();
   if (!equipment) {
     form.elements.equipment.reportValidity();
     return;
   }
-  const id = requests.reduce((largest, request) => Math.max(largest, request.id), 0) + 1;
-  saveRequests([...requests, { id, equipment, priority: form.elements.priority.value, status: "Open" }]);
+  const priority = form.elements.priority.value;
   form.reset();
+  await updateRequests(current => {
+    const id = current.reduce((largest, request) => Math.max(largest, request.id), 0) + 1;
+    return [...current, { id, equipment, priority, status: "Open" }];
+  });
+});
+
+window.addEventListener("storage", event => {
+  if (event.key !== storageKey) return;
+  requests = loadRequests(requests);
+  render();
 });
 
 filter.value = "all";
